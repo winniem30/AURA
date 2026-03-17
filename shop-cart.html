@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AURA — Cart</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root { --cream:#F5F0E8; --charcoal:#1A1A1A; --terracotta:#C4622D; --gold:#C9A84C; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--cream); color:var(--charcoal); font-family:'DM Sans',sans-serif; }
+
+  nav { position:fixed; top:0; width:100%; z-index:100; display:flex; align-items:center; justify-content:space-between; padding:1.2rem 4rem; background:rgba(245,240,232,0.92); backdrop-filter:blur(12px); border-bottom:1px solid rgba(26,26,26,0.08); }
+  .logo { font-family:'Playfair Display',serif; font-size:1.8rem; font-weight:900; letter-spacing:0.1em; color:var(--charcoal); text-decoration:none; }
+  .logo span { color:var(--terracotta); }
+  .nav-links { display:flex; gap:2.5rem; list-style:none; }
+  .nav-links a { text-decoration:none; color:var(--charcoal); font-size:0.85rem; font-weight:500; letter-spacing:0.08em; text-transform:uppercase; transition:color 0.2s; }
+  .nav-links a:hover { color:var(--terracotta); }
+  .nav-right { display:flex; gap:1.5rem; align-items:center; }
+  .nav-icon { font-size:1.2rem; cursor:pointer; }
+  .cart-badge { position:relative; text-decoration:none; }
+  .badge { position:absolute; top:-6px; right:-6px; background:var(--terracotta); color:#fff; border-radius:50%; font-size:0.6rem; width:16px; height:16px; display:flex; align-items:center; justify-content:center; font-weight:700; }
+
+  .page-wrapper { padding: 8rem 5rem 4rem; }
+  .page-header { margin-bottom:2.5rem; }
+  .breadcrumb { font-size:0.75rem; color:#999; margin-bottom:0.8rem; }
+  .breadcrumb a { color:#999; text-decoration:none; }
+  .breadcrumb a:hover { color:var(--terracotta); }
+  .page-title { font-family:'Playfair Display',serif; font-size:3rem; font-weight:900; }
+
+  /* PROGRESS */
+  .checkout-steps { display:flex; align-items:center; gap:0; margin-bottom:3rem; max-width:500px; }
+  .step { display:flex; align-items:center; gap:0.6rem; }
+  .step-num { width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.78rem; font-weight:700; }
+  .step.done .step-num { background:var(--charcoal); color:#fff; }
+  .step.active .step-num { background:var(--terracotta); color:#fff; }
+  .step.pending .step-num { background:transparent; border:2px solid #ccc; color:#999; }
+  .step-label { font-size:0.75rem; letter-spacing:0.08em; text-transform:uppercase; font-weight:500; }
+  .step.active .step-label { color:var(--terracotta); }
+  .step.pending .step-label { color:#aaa; }
+  .step-line { width:60px; height:1px; background:#ccc; margin: 0 0.5rem; }
+
+  /* CART LAYOUT */
+  .cart-layout { display:grid; grid-template-columns:1fr 380px; gap:3rem; align-items:start; }
+
+  /* CART ITEMS */
+  .cart-items-section h2 { font-family:'Playfair Display',serif; font-size:1.4rem; margin-bottom:1.5rem; }
+  .cart-item { display:grid; grid-template-columns:100px 1fr auto; gap:1.5rem; padding:1.5rem 0; border-bottom:1px solid rgba(26,26,26,0.1); align-items:center; }
+  .cart-item:last-child { border-bottom:none; }
+  .item-img { height:100px; border-radius:2px; display:flex; align-items:center; justify-content:center; font-size:2.5rem; }
+  .item1-img { background:linear-gradient(145deg,#E8DDD0,#D4C4B0); }
+  .item2-img { background:linear-gradient(145deg,#E8D0D0,#D4B8B8); }
+  .item3-img { background:linear-gradient(145deg,#D0D8E8,#B8C4D4); }
+  .item-details {}
+  .item-brand { font-size:0.7rem; letter-spacing:0.1em; text-transform:uppercase; color:#999; margin-bottom:0.3rem; }
+  .item-name { font-family:'Playfair Display',serif; font-size:1.05rem; margin-bottom:0.5rem; }
+  .item-meta { font-size:0.8rem; color:#888; font-weight:300; margin-bottom:0.8rem; }
+  .item-meta span { margin-right:1rem; }
+  .qty-control { display:flex; align-items:center; gap:0; border:1px solid rgba(26,26,26,0.2); width:fit-content; }
+  .qty-btn { width:32px; height:32px; background:transparent; border:none; cursor:pointer; font-size:1rem; font-family:'DM Sans',sans-serif; transition:background 0.2s; }
+  .qty-btn:hover { background:rgba(26,26,26,0.06); }
+  .qty-val { width:40px; text-align:center; font-size:0.9rem; font-weight:500; }
+  .item-right { text-align:right; }
+  .item-price { font-family:'Playfair Display',serif; font-size:1.2rem; font-weight:700; margin-bottom:0.5rem; }
+  .remove-btn { background:none; border:none; font-size:0.75rem; color:#aaa; cursor:pointer; text-transform:uppercase; letter-spacing:0.08em; transition:color 0.2s; }
+  .remove-btn:hover { color:var(--terracotta); }
+
+  /* COUPON */
+  .coupon-section { display:flex; gap:0.8rem; margin-top:1.5rem; padding-top:1.5rem; border-top:1px solid rgba(26,26,26,0.1); }
+  .coupon-input { flex:1; padding:0.75rem 1rem; border:1px solid rgba(26,26,26,0.2); background:transparent; font-family:'DM Sans',sans-serif; font-size:0.88rem; outline:none; }
+  .coupon-input:focus { border-color:var(--charcoal); }
+  .coupon-btn { padding:0.75rem 1.5rem; background:var(--charcoal); color:#fff; border:none; font-family:'DM Sans',sans-serif; font-size:0.78rem; letter-spacing:0.1em; text-transform:uppercase; cursor:pointer; font-weight:500; transition:background 0.2s; }
+  .coupon-btn:hover { background:var(--terracotta); }
+
+  /* ORDER SUMMARY */
+  .order-summary { background:#fff; padding:2rem; border:1px solid rgba(26,26,26,0.1); position:sticky; top:100px; }
+  .summary-title { font-family:'Playfair Display',serif; font-size:1.3rem; margin-bottom:1.5rem; }
+  .summary-lines { display:flex; flex-direction:column; gap:0.8rem; margin-bottom:1.5rem; }
+  .summary-line { display:flex; justify-content:space-between; font-size:0.88rem; }
+  .summary-line .label { color:#777; font-weight:300; }
+  .summary-line .value { font-weight:500; }
+  .summary-line.free .value { color:#2D6B44; font-weight:600; }
+  .summary-divider { border:none; border-top:1px solid rgba(26,26,26,0.1); margin:1rem 0; }
+  .summary-total { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:1.5rem; }
+  .total-label { font-size:0.85rem; letter-spacing:0.1em; text-transform:uppercase; font-weight:600; }
+  .total-amount { font-family:'Playfair Display',serif; font-size:1.8rem; font-weight:900; }
+  .total-tax { font-size:0.72rem; color:#aaa; display:block; text-align:right; margin-top:-0.5rem; font-weight:300; }
+  .checkout-btn { width:100%; padding:1.1rem; background:var(--charcoal); color:var(--cream); border:none; font-family:'DM Sans',sans-serif; font-size:0.85rem; letter-spacing:0.12em; text-transform:uppercase; cursor:pointer; font-weight:500; transition:all 0.3s; margin-bottom:0.8rem; }
+  .checkout-btn:hover { background:var(--terracotta); }
+  .continue-btn { width:100%; padding:1rem; background:transparent; color:var(--charcoal); border:2px solid var(--charcoal); font-family:'DM Sans',sans-serif; font-size:0.82rem; letter-spacing:0.1em; text-transform:uppercase; cursor:pointer; font-weight:500; transition:all 0.3s; text-align:center; text-decoration:none; display:block; }
+  .continue-btn:hover { background:var(--charcoal); color:var(--cream); }
+  .payment-icons { display:flex; justify-content:center; gap:0.8rem; margin-top:1.2rem; font-size:1.3rem; opacity:0.4; }
+  .secure-note { text-align:center; font-size:0.72rem; color:#aaa; margin-top:0.8rem; letter-spacing:0.05em; }
+
+  /* RECOMMENDED */
+  .recommended { margin-top:4rem; }
+  .rec-title { font-family:'Playfair Display',serif; font-size:1.8rem; margin-bottom:1.5rem; }
+  .rec-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:1.2rem; }
+  .rec-card { cursor:pointer; }
+  .rec-img { height:180px; display:flex; align-items:center; justify-content:center; font-size:2.5rem; border-radius:2px; margin-bottom:0.7rem; }
+  .r1 { background:linear-gradient(145deg,#D8D0E8,#C0B8D4); }
+  .r2 { background:linear-gradient(145deg,#E0E8D0,#C8D4B8); }
+  .r3 { background:linear-gradient(145deg,#E8D4D0,#D4B8B4); }
+  .r4 { background:linear-gradient(145deg,#D0E8E8,#B8D4D4); }
+  .rec-name { font-family:'Playfair Display',serif; font-size:0.92rem; margin-bottom:0.3rem; }
+  .rec-price { font-size:0.88rem; font-weight:600; color:var(--charcoal); }
+
+  footer { background:var(--charcoal); color:var(--cream); padding:3rem 5rem; text-align:center; margin-top:4rem; }
+  footer p { font-size:0.8rem; color:#666; }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="shop-home.html" class="logo">AU<span>R</span>A</a>
+  <ul class="nav-links">
+    <li><a href="shop-home.html">Home</a></li>
+    <li><a href="shop-products.html">Shop</a></li>
+    <li><a href="#">Collections</a></li>
+    <li><a href="#">About</a></li>
+  </ul>
+  <div class="nav-right">
+    <span class="nav-icon">🔍</span>
+    <span class="nav-icon">♡</span>
+    <a class="nav-icon cart-badge" href="shop-cart.html">🛍
+      <span class="badge">3</span>
+    </a>
+  </div>
+</nav>
+
+<div class="page-wrapper">
+  <div class="page-header">
+    <p class="breadcrumb"><a href="shop-home.html">Home</a> / Your Cart</p>
+    <h1 class="page-title">Your Cart</h1>
+  </div>
+
+  <!-- STEPS -->
+  <div class="checkout-steps">
+    <div class="step active">
+      <div class="step-num">1</div>
+      <div class="step-label">Cart</div>
+    </div>
+    <div class="step-line"></div>
+    <div class="step pending">
+      <div class="step-num">2</div>
+      <div class="step-label">Shipping</div>
+    </div>
+    <div class="step-line"></div>
+    <div class="step pending">
+      <div class="step-num">3</div>
+      <div class="step-label">Payment</div>
+    </div>
+    <div class="step-line"></div>
+    <div class="step pending">
+      <div class="step-num">4</div>
+      <div class="step-label">Confirm</div>
+    </div>
+  </div>
+
+  <div class="cart-layout">
+    <!-- CART ITEMS -->
+    <div>
+      <div class="cart-items-section">
+        <h2>3 Items in your cart</h2>
+
+        <div class="cart-item">
+          <div class="item-img item1-img">👗</div>
+          <div class="item-details">
+            <p class="item-brand">Aura Studio</p>
+            <p class="item-name">Linen Midi Dress</p>
+            <div class="item-meta"><span>Size: M</span><span>Color: Cream</span></div>
+            <div class="qty-control">
+              <button class="qty-btn" onclick="updateQty(this,-1)">−</button>
+              <span class="qty-val">1</span>
+              <button class="qty-btn" onclick="updateQty(this,1)">+</button>
+            </div>
+          </div>
+          <div class="item-right">
+            <p class="item-price">₹2,499</p>
+            <button class="remove-btn">Remove</button>
+          </div>
+        </div>
+
+        <div class="cart-item">
+          <div class="item-img item2-img">👜</div>
+          <div class="item-details">
+            <p class="item-brand">Aura Studio</p>
+            <p class="item-name">Structured Tote Bag</p>
+            <div class="item-meta"><span>Color: Black</span></div>
+            <div class="qty-control">
+              <button class="qty-btn" onclick="updateQty(this,-1)">−</button>
+              <span class="qty-val">1</span>
+              <button class="qty-btn" onclick="updateQty(this,1)">+</button>
+            </div>
+          </div>
+          <div class="item-right">
+            <p class="item-price">₹3,799</p>
+            <button class="remove-btn">Remove</button>
+          </div>
+        </div>
+
+        <div class="cart-item">
+          <div class="item-img item3-img">👟</div>
+          <div class="item-details">
+            <p class="item-brand">Stride Co.</p>
+            <p class="item-name">Canvas Sneakers</p>
+            <div class="item-meta"><span>Size: 38</span><span>Color: White</span></div>
+            <div class="qty-control">
+              <button class="qty-btn" onclick="updateQty(this,-1)">−</button>
+              <span class="qty-val">1</span>
+              <button class="qty-btn" onclick="updateQty(this,1)">+</button>
+            </div>
+          </div>
+          <div class="item-right">
+            <p class="item-price">₹1,899</p>
+            <button class="remove-btn">Remove</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="coupon-section">
+        <input class="coupon-input" type="text" placeholder="Enter promo code (try AURA20)">
+        <button class="coupon-btn">Apply</button>
+      </div>
+
+      <!-- RECOMMENDED -->
+      <div class="recommended">
+        <h3 class="rec-title">You May Also Like</h3>
+        <div class="rec-grid">
+          <div class="rec-card">
+            <div class="rec-img r1">🧣</div>
+            <p class="rec-name">Cashmere Wrap</p>
+            <p class="rec-price">₹999</p>
+          </div>
+          <div class="rec-card">
+            <div class="rec-img r2">🕶️</div>
+            <p class="rec-name">Oval Sunglasses</p>
+            <p class="rec-price">₹1,499</p>
+          </div>
+          <div class="rec-card">
+            <div class="rec-img r3">💍</div>
+            <p class="rec-name">Gold Hoops</p>
+            <p class="rec-price">₹2,199</p>
+          </div>
+          <div class="rec-card">
+            <div class="rec-img r4">🧢</div>
+            <p class="rec-name">Embroidered Cap</p>
+            <p class="rec-price">₹799</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ORDER SUMMARY -->
+    <div>
+      <div class="order-summary">
+        <h3 class="summary-title">Order Summary</h3>
+        <div class="summary-lines">
+          <div class="summary-line">
+            <span class="label">Subtotal (3 items)</span>
+            <span class="value">₹8,197</span>
+          </div>
+          <div class="summary-line free">
+            <span class="label">Shipping</span>
+            <span class="value">FREE</span>
+          </div>
+          <div class="summary-line">
+            <span class="label">Promo Discount</span>
+            <span class="value">— ₹0</span>
+          </div>
+        </div>
+        <hr class="summary-divider">
+        <div class="summary-total">
+          <span class="total-label">Total</span>
+          <div>
+            <span class="total-amount">₹8,197</span>
+            <span class="total-tax">Inclusive of all taxes</span>
+          </div>
+        </div>
+        <button class="checkout-btn">Proceed to Checkout →</button>
+        <a href="shop-products.html" class="continue-btn">Continue Shopping</a>
+        <div class="payment-icons">💳 🔒 📦</div>
+        <p class="secure-note">🔒 Secure 256-bit SSL encrypted checkout</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer><p>© 2026 AURA. All rights reserved.</p></footer>
+
+<script>
+function updateQty(btn, delta) {
+  const wrap = btn.parentElement;
+  const display = wrap.querySelector('.qty-val');
+  let val = parseInt(display.textContent) + delta;
+  if(val < 1) val = 1;
+  display.textContent = val;
+}
+</script>
+</body>
+</html>
