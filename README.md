@@ -59,21 +59,6 @@ aura-shopping-website/
 
 🌐 **[View Live Site →](https://YOUR-USERNAME.github.io/aura-shopping-website/)**
 
-> Replace `YOUR-USERNAME` with your actual GitHub username after enabling GitHub Pages.
-
----
-
-## 🛠️ Run Locally
-
-No setup needed! Just clone and open:
-```bash
-git clone https://github.com/YOUR-USERNAME/aura-shopping-website.git
-cd aura-shopping-website
-# Open index.html in your browser
-```
-
----
-
 ## 📸 Pages Preview
 
 | Home | Shop | Cart |
